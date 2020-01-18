@@ -18,6 +18,9 @@ Vue.config.warnHandler = function (msg, vm, trace) {
     trace = null
   }
 }
+
+Vue.config['backendUrl'] = 'http://localhost:3000'
+
 new Vue({
   vuetify,
   render: h => h(App)
