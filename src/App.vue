@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import EventCalendar from './components/EventCalendar';
+import EventCalendar from './components/EventCalendar'
 
 export default {
   name: 'App',
@@ -16,8 +16,6 @@ export default {
     EventCalendar,
   },
 
-  data: () => ({
-    //
-  }),
-};
+  data: () => ({}),
+}
 </script>

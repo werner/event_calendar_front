@@ -38,24 +38,6 @@
         </v-toolbar>
       </v-sheet>
 
-      <v-dialog v-model="dialog" max-width="500">
-        <v-card>
-          <v-container>
-            <v-form @submit.prevent="addEvent">
-              <v-text-field v-model="name" type="text" label="event name (required)"></v-text-field>
-              <v-text-field v-model="start" type="date" label="start (required)"></v-text-field>
-              <v-text-field v-model="end" type="date" label="end (required)"></v-text-field>
-              <v-btn
-                type="submit"
-                color="primary"
-                class="mr-4"
-                @click.stop="dialog = false"
-              >create event</v-btn>
-            </v-form>
-          </v-container>
-        </v-card>
-      </v-dialog>
-
       <v-dialog v-model="dialogDate" max-width="500">
         <v-card>
           <v-container>
@@ -86,6 +68,7 @@
           :type="type"
           @click:more="viewDay"
           @click:date="setDialogDate"
+          @change="updateRange"
         ></v-calendar>
         <v-menu
           v-model="selectedOpen"
@@ -132,8 +115,11 @@
 </template>
 
 <script>
+import EventService from '../services/EventService.js'
+
 export default {
   data: () => ({
+    title: '',
     today: new Date().toISOString().substr(0, 10),
     focus: new Date().toISOString().substr(0, 10),
     type: 'month',
@@ -157,41 +143,31 @@ export default {
     dialogDate: false
   }),
   mounted () {
+    this.setTitle()
+    this.$refs.calendar.checkChange()
     this.getEvents()
   },
-  computed: {
-    title () {
-      const { start, end } = this
-      if (!start || !end) {
-        return ''
-      }
-      const startMonth = this.monthFormatter(start)
-      const endMonth = this.monthFormatter(end)
-      const suffixMonth = startMonth === endMonth ? '' : endMonth
-      const startYear = start.year
-      const endYear = end.year
-      const suffixYear = startYear === endYear ? '' : endYear
-      const startDay = start.day + this.nth(start.day)
-      const endDay = end.day + this.nth(end.day)
-      switch (this.type) {
-        case 'month':
-        return `${startMonth} ${startYear}`
-        case 'week':
-        case '4day':
-        return `${startMonth} ${startDay} ${startYear} - ${suffixMonth} ${endDay} ${suffixYear}`
-        case 'day':
-        return `${startMonth} ${startDay} ${startYear}`
-      }
-      return ''
-    },
-    monthFormatter () {
-      return this.$refs.calendar.getFormatter({
-        timeZone: 'UTC', month: 'long',
-      })
-    }
-  },
   methods: {
+    setTitle () {
+      const end = this.end
+      const month = Intl.DateTimeFormat('en-US', {month: 'long'}).format(new Date(end.date))
+      this.title = `${month} ${end.year}`
+    },
     async getEvents () {
+      let events = []
+      let eventsService = await new EventService
+      let response = await eventsService.list()
+      if (response.status == 200) {
+        response.data.forEach((event) =>
+          events.push({
+            name: event.description,
+            start: event.start_date,
+            end: event.end_date,
+            color: 'blue'
+          })
+        )
+      }
+      this.events = events
     },
     setDialogDate( { date }) {
       this.dialogDate = true
@@ -215,18 +191,21 @@ export default {
     },
     async addEvent () {
       if (this.name && this.start && this.end) {
+        let eventsService = await new EventService
+        await eventsService.create({
+          event: {
+            description: this.name,
+            start_date: this.start,
+            end_date: this.end
+          }
+        })
         this.getEvents()
-        this.name = '',
-        this.details = '',
-        this.start = '',
-        this.end = '',
-        this.color = ''
+        this.name = ''
+        this.start = ''
+        this.end = ''
       } else {
         alert('You must enter event name, start, and end time')
       }
-    },
-    editEvent (ev) {
-      this.currentlyEditing = ev.id
     },
     updateRange ({ start, end }) {
       this.start = start
