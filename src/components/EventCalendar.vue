@@ -3,7 +3,7 @@
     <v-col>
       <v-sheet height="64">
         <v-toolbar flat color="white">
-          <v-btn color="primary" dark @click.stop="dialog = true">New Event</v-btn>
+          <v-btn color="primary" dark @click.stop="dialogDate = true">New Event</v-btn>
           <v-btn outlined class="mr-4" @click="setToday">Today</v-btn>
           <v-btn fab text small @click="prev">
             <v-icon small>mdi-chevron-left</v-icon>
@@ -13,28 +13,6 @@
           </v-btn>
           <v-toolbar-title>{{ title }}</v-toolbar-title>
           <div class="flex-grow-1"></div>
-          <v-menu bottom right>
-            <template v-slot:activator="{ on }">
-              <v-btn outlined v-on="on">
-                <span>{{ typeToLabel[type] }}</span>
-                <v-icon right>mdi-menu-down</v-icon>
-              </v-btn>
-            </template>
-            <v-list>
-              <v-list-item @click="type = 'day'">
-                <v-list-item-title>Day</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="type = 'week'">
-                <v-list-item-title>Week</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="type = 'month'">
-                <v-list-item-title>Month</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="type = '4day'">
-                <v-list-item-title>4 days</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
         </v-toolbar>
       </v-sheet>
 
@@ -70,7 +48,8 @@
           @click:date="setDialogDate"
           @change="updateRange"
           data-cy="calendar-cy"
-        ></v-calendar>
+        >
+        </v-calendar>
         <v-menu
           v-model="selectedOpen"
           :close-on-content-click="false"
@@ -116,25 +95,19 @@
 </template>
 
 <script>
-import EventService from '../services/EventService.js'
+import EventService from "../services/EventService.js";
 
 export default {
   data: () => ({
-    title: '',
+    title: "",
     today: new Date().toISOString().substr(0, 10),
     focus: new Date().toISOString().substr(0, 10),
-    type: 'month',
-    typeToLabel: {
-      month: 'Month',
-      week: 'Week',
-      day: 'Day',
-      '4day': '4 Days',
-    },
+    type: "month",
     name: null,
     details: null,
     start: null,
     end: null,
-    color: '#1976D2', // default event color
+    color: "#1976D2",
     currentlyEditing: null,
     selectedEvent: {},
     selectedElement: null,
@@ -143,80 +116,84 @@ export default {
     dialog: false,
     dialogDate: false
   }),
-  mounted () {
-    this.setTitle()
-    this.$refs.calendar.checkChange()
-    this.getEvents()
+  mounted() {
+    this.$refs.calendar.checkChange();
+    this.setTitle();
+    this.getEvents();
   },
   methods: {
-    setTitle () {
-      const end = this.end
-      const month = Intl.DateTimeFormat('en-US', {month: 'long'}).format(new Date(end.date))
-      this.title = `${month} ${end.year}`
+    setTitle() {
+      const end = this.end;
+      const month = Intl.DateTimeFormat("en-US", { month: "long" }).format(
+        new Date(end.date)
+      );
+      this.title = `${month} ${end.year}`;
     },
-    async getEvents () {
-      let events = []
-      let eventsService = await new EventService
-      let response = await eventsService.list()
+    async getEvents() {
+      let events = [];
+      let eventsService = await new EventService();
+      let response = await eventsService.list();
       if (response.status == 200) {
-        response.data.forEach((event) =>
+        response.data.forEach(event =>
           events.push({
             name: event.description,
             start: event.start_date,
             end: event.end_date,
-            color: 'blue'
+            color: "#D9AD2A"
           })
-        )
+        );
       }
-      this.events = events
+      this.events = events;
     },
-    setDialogDate( { date }) {
-      this.dialogDate = true
-      this.focus = date
+    setDialogDate({ date }) {
+      this.dialogDate = true;
+      this.focus = date;
     },
-    viewDay ({ date }) {
-      this.focus = date
-      this.type = 'day'
+    viewDay({ date }) {
+      this.focus = date;
+      this.type = "day";
     },
-    getEventColor (event) {
-      return event.color
+    getEventColor(event) {
+      return event.color;
     },
-    setToday () {
-      this.focus = this.today
+    setToday() {
+      this.focus = this.today;
     },
-    prev () {
-      this.$refs.calendar.prev()
+    prev() {
+      this.$refs.calendar.prev();
+      this.setTitle();
     },
-    next () {
-      this.$refs.calendar.next()
+    next() {
+      this.$refs.calendar.next();
+      this.setTitle();
     },
-    async addEvent () {
+    async addEvent() {
       if (this.name && this.start && this.end) {
-        let eventsService = await new EventService
+        let eventsService = await new EventService();
         await eventsService.create({
           event: {
             description: this.name,
             start_date: this.start,
             end_date: this.end
           }
-        })
-        this.getEvents()
-        this.name = ''
-        this.start = ''
-        this.end = ''
+        });
+        this.getEvents();
+        this.name = "";
+        this.start = "";
+        this.end = "";
       } else {
-        alert('You must enter event name, start, and end time')
+        alert("You must enter event name, start, and end time");
       }
     },
-    updateRange ({ start, end }) {
-      this.start = start
-      this.end = end
+    updateRange({ start, end }) {
+      this.start = start;
+      this.end = end;
     },
-    nth (d) {
+    nth(d) {
       return d > 3 && d < 21
-      ? 'th'
-      : ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][d % 10]
+        ? "th"
+        : ["th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"][d % 10];
     }
   }
-}
+};
 </script>
