@@ -19,7 +19,11 @@ Vue.config.warnHandler = function (msg, vm, trace) {
   }
 }
 
-Vue.config['backendUrl'] = 'http://localhost:3000'
+if (process.env.NODE_ENV === 'production') {
+  Vue.config['backendUrl'] = 'https://vast-reaches-19235.herokuapp.com'
+} else if (process.env.NODE_ENV === 'development') {
+  Vue.config['backendUrl'] = 'http://localhost:3000'
+}
 
 new Vue({
   vuetify,
