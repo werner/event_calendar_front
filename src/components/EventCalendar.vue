@@ -69,6 +69,7 @@
           @click:more="viewDay"
           @click:date="setDialogDate"
           @change="updateRange"
+          data-cy="calendar-cy"
         ></v-calendar>
         <v-menu
           v-model="selectedOpen"
